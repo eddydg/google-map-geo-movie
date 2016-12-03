@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <title>Geo Movie Map</title>
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <script type='text/javascript' src='https://code.jquery.com/jquery-3.1.1.min.js'></script>
+
+    <div id="map"></div>
+    <script>
+
+    var centerLatLng = { lat: 48.858093, lng: 2.294694 };
+    var map = null;
+    var movies = [];
+    var movieCircles =[];
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 11,
+        center: centerLatLng
+      });
+
+      $.getJSON("/movies/2015", function(data) {
+        movies = data;
+        movieCircles = [];
+
+        for (let movie of movies) {
+          let latlng = movie.latlng.split(',');
+          latlng = { lat: parseInt(latlng[0]), lng: parseInt(latlng[1]) };
+
+          var votes = 1000;
+          var movieCircle = new google.maps.Circle({
+            strokeColor: '#FF0000',
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: '#FF0000',
+            fillOpacity: 0.35,
+            map: map,
+            center: latlng,
+            radius: Math.sqrt(votes) * 1000,
+            title: movie.title
+          });
+
+          movieCircles.push(movieCircle);
+        }
+      });
+
+    }
+
+    </script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyChNVy6JvUNOYvSM844NiQXd4SXHsq7fAM&callback=initMap">
+    </script>
+  </body>
+</html>
