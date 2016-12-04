@@ -35,12 +35,24 @@
 
     <script>
 
-    $("#yearRangeSelector").asRange();
+    $("#yearRangeSelector").asRange({
+      value: currentSelectedYear,
+      onChange: changedSelectedYear
+    });
+
+    function changedSelectedYear() {
+      let value = $("#yearRangeSelector").val();
+      if (value != currentSelectedYear) {
+        currentSelectedYear = parseInt(value);
+        console.log(value);
+      }
+    }
 
     var centerLatLng = { lat: 48.858093, lng: 2.294694 };
     var map = null;
     var movies = [];
-    var movieCircles =[];
+    var movieCircles = [];
+    var currentSelectedYear = 2000;
 
     function initMap() {
       map = new google.maps.Map(document.getElementById('map'), {
