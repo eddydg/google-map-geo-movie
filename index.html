@@ -4,7 +4,7 @@
     <meta name="viewport" content="initial-scale=1.0">
     <meta charset="utf-8">
     <title>Geo Movie Map</title>
-    <link rel="stylesheet" href="css/asRange.min.css">
+    <link rel="stylesheet" href="public/css/asRange.min.css">
     <style>
       html, body {
         height: 100%;
@@ -24,35 +24,27 @@
   <body>
 
     <script type='text/javascript' src='https://code.jquery.com/jquery-3.1.1.min.js'></script>
-    <script type='text/javascript' src='js/jquery-asRange.min.js'></script>
+    <script type='text/javascript' src='public/js/jquery-asRange.min.js'></script>
 
     <div id="map"></div>
     <br>
 
-    <input id="yearRangeSelector" type="range" min="1950" max="2015" name="points" step="1" />
+    <input id="yearRangeSelector" type="range" min="1995" max="2017" name="points" step="1" />
 
 
 
     <script>
-
-    $("#yearRangeSelector").asRange({
-      value: currentSelectedYear,
-      onChange: changedSelectedYear
-    });
-
-    function changedSelectedYear() {
-      let value = $("#yearRangeSelector").val();
-      if (value != currentSelectedYear) {
-        currentSelectedYear = parseInt(value);
-        console.log(value);
-      }
-    }
-
     var centerLatLng = { lat: 48.858093, lng: 2.294694 };
     var map = null;
     var movies = [];
     var movieCircles = [];
     var currentSelectedYear = 2000;
+    var movieHttpRequest = null;
+
+    $("#yearRangeSelector").asRange({
+      value: currentSelectedYear,
+      onChange: changedSelectedYear
+    });
 
     function initMap() {
       map = new google.maps.Map(document.getElementById('map'), {
@@ -60,31 +52,52 @@
         center: centerLatLng
       });
 
-      $.getJSON("/movies/2015", function(data) {
+      requestMovieData();
+    }
+
+    function changedSelectedYear() {
+      let value = $("#yearRangeSelector").val();
+      if (value != currentSelectedYear) {
+        currentSelectedYear = parseInt(value);
+
+        if (movieHttpRequest && movieHttpRequest.readyState != 4) {
+          movieHttpRequest.abort();
+          console.log("Canceling movie request.");
+        }
+        requestMovieData(currentSelectedYear);
+        console.log("Requesting movies...");
+      }
+    }
+
+    function requestMovieData(year = currentSelectedYear) {
+      movieHttpRequest = $.getJSON("/movies/" + year, function(data) {
+        console.log("Received movie data !");
         movies = data;
+
+        for (let movieCircle of movieCircles) {
+          movieCircle.setMap(null);
+        }
         movieCircles = [];
 
         for (let movie of movies) {
           let latlng = movie.latlng.split(',');
           latlng = { lat: parseInt(latlng[0]), lng: parseInt(latlng[1]) };
 
-          var votes = 1000;
           var movieCircle = new google.maps.Circle({
-            strokeColor: '#FF0000',
+            strokeColor: '#0000FF',
             strokeOpacity: 0.8,
-            strokeWeight: 2,
-            fillColor: '#FF0000',
+            strokeWeight: 1,
+            fillColor: '#0000FF',
             fillOpacity: 0.35,
             map: map,
             center: latlng,
-            radius: Math.sqrt(votes) * 1000,
+            radius: Math.sqrt(movie.votes_this_year) * 1000,
             title: movie.title
           });
 
           movieCircles.push(movieCircle);
         }
       });
-
     }
 
     </script>
