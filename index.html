@@ -29,17 +29,21 @@
     <div id="map"></div>
     <br>
 
-    <input id="yearRangeSelector" type="range" min="1995" max="2017" name="points" step="1" />
+    <input id="yearRangeSelector" type="range" min="1995" max="2016" name="points" step="1" />
 
 
 
     <script>
     var centerLatLng = { lat: 48.858093, lng: 2.294694 };
+    var currentSelectedYear = 2000;
+
     var map = null;
+    var infoWindow = null;
+    var movieHttpRequest = null;
+
     var movies = [];
     var movieCircles = [];
-    var currentSelectedYear = 2000;
-    var movieHttpRequest = null;
+
 
     $("#yearRangeSelector").asRange({
       value: currentSelectedYear,
@@ -48,7 +52,7 @@
 
     function initMap() {
       map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 11,
+        zoom: 5,
         center: centerLatLng
       });
 
@@ -83,7 +87,7 @@
           let latlng = movie.latlng.split(',');
           latlng = { lat: parseInt(latlng[0]), lng: parseInt(latlng[1]) };
 
-          var movieCircle = new google.maps.Circle({
+          let movieCircle = new google.maps.Circle({
             strokeColor: '#0000FF',
             strokeOpacity: 0.8,
             strokeWeight: 1,
@@ -91,8 +95,20 @@
             fillOpacity: 0.35,
             map: map,
             center: latlng,
-            radius: Math.sqrt(movie.votes_this_year) * 1000,
-            title: movie.title
+            radius: movie.votes_this_year * movie.votes_this_year / 100, //Math.sqrt(movie.votes_this_year) * 1000,
+            title: movie.title,
+            clickable: true
+          });
+
+          google.maps.event.addListener(movieCircle, 'mouseover', function(ev){
+            if (infoWindow) infoWindow.close(map);
+            infoWindow = new google.maps.InfoWindow({content: movie.title});
+            infoWindow.setPosition(movieCircle.getCenter());
+            infoWindow.open(map);
+          });
+
+          google.maps.event.addListener(movieCircle, 'click', function(ev){
+              map.panTo(latlng);
           });
 
           movieCircles.push(movieCircle);
