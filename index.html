@@ -34,6 +34,9 @@
 
 
     <script>
+    //var BASE_OMDB_API = "http://www.omdbapi.com/?plot=short&r=json&t="
+    var BASE_THEMOVIEDB_API = "https://api.themoviedb.org/3/search/multi?api_key=cc5d266598f3f83d020f116ec5bb2a7f&language=fr-FR&query=";
+    var BASE_THEMOVIEDB_POSTER = "https://image.tmdb.org/t/p/w150";
     var centerLatLng = { lat: 48.858093, lng: 2.294694 };
     var currentSelectedYear = 2000;
 
@@ -109,9 +112,33 @@
 
           google.maps.event.addListener(movieCircle, 'click', function(ev){
               map.panTo(latlng);
+              if (infoWindow) infoWindow.close(map);
+              infoWindow = new google.maps.InfoWindow({content: "loading..."});
+              setInfoWindowContent(movie)
+              infoWindow.setPosition(movieCircle.getCenter());
+              infoWindow.open(map);
           });
 
           movieCircles.push(movieCircle);
+        }
+      });
+    }
+
+    function setInfoWindowContent(movie) {
+      let q = movie.title.replace(/ *\([^)]*\) */g, "") // Remove year
+      let apiUrl = BASE_THEMOVIEDB_API + q;
+      $.getJSON(apiUrl, function(data){
+        if (infoWindow) {
+          let content = "";
+          if (data.results.length > 0) {
+            let result = data.results[0];
+            content += "<h3>"+result.title+"</h3><br>"
+            content += "<img src='"+BASE_THEMOVIEDB_POSTER+result.poster_path+"'/><br>"
+            content += result.overview;
+          } else {
+            content = "Movie not found in TheMovieDB.";
+          }
+          infoWindow.setContent(content);
         }
       });
     }
