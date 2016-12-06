@@ -87,6 +87,7 @@
         movieCircles = [];
 
         for (let movie of movies) {
+          let movieTitle = movie.title;
           let latlng = movie.latlng.split(',');
           latlng = { lat: parseInt(latlng[0]), lng: parseInt(latlng[1]) };
 
@@ -99,13 +100,13 @@
             map: map,
             center: latlng,
             radius: movie.votes_this_year * movie.votes_this_year / 100, //Math.sqrt(movie.votes_this_year) * 1000,
-            title: movie.title,
+            title: movieTitle,
             clickable: true
           });
 
           google.maps.event.addListener(movieCircle, 'mouseover', function(ev){
             if (infoWindow) infoWindow.close(map);
-            infoWindow = new google.maps.InfoWindow({content: movie.title});
+            infoWindow = new google.maps.InfoWindow({content: movieTitle});
             infoWindow.setPosition(movieCircle.getCenter());
             infoWindow.open(map);
           });
@@ -114,7 +115,7 @@
               map.panTo(latlng);
               if (infoWindow) infoWindow.close(map);
               infoWindow = new google.maps.InfoWindow({content: "loading..."});
-              setInfoWindowContent(movie)
+              setInfoWindowContent(movieTitle)
               infoWindow.setPosition(movieCircle.getCenter());
               infoWindow.open(map);
           });
@@ -124,8 +125,8 @@
       });
     }
 
-    function setInfoWindowContent(movie) {
-      let q = movie.title.replace(/ *\([^)]*\) */g, "") // Remove year
+    function setInfoWindowContent(movieTitle) {
+      let q = movieTitle.replace(/ *\([^)]*\) */g, "") // Remove year
       let apiUrl = BASE_THEMOVIEDB_API + q;
       $.getJSON(apiUrl, function(data){
         if (infoWindow) {
