@@ -1,0 +1,23 @@
+{
+  "name": "google-map-geo-movie",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.13.3",
+    "request": "latest",
+    "pg": "latest",
+    "path": "latest"
+  },
+  "engines": {
+    "node": "5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eddydg/google-map-geo-movie"
+  },
+  "author": "Eddydg",
+  "license": "MIT"
+}
