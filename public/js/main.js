@@ -10,6 +10,7 @@ var movieHttpRequest = null;
 
 var movies = [];
 var movieCircles = [];
+var movieDataCache = {};
 
 var fakeLoader = null;
 
@@ -22,7 +23,7 @@ $(() => {
   });
 
   $("#yearRangeSelector").asRange({
-    value: currentSelectedYear,
+    value: currentSelectedYear + "",
     onChange: changedSelectedYear
   });
 });
@@ -53,56 +54,79 @@ function changedSelectedYear() {
 }
 
 function requestMovieData(year = currentSelectedYear) {
-  if (fakeLoader) fakeLoader.fadeIn();
+  if (movieDataCache[year]) {
+    console.log("Movie data already cached.");
+    updateMovie(movieDataCache[year])
+  }
+  else {
+    if (fakeLoader) fakeLoader.fadeIn();
+    movieHttpRequest = $.getJSON("/movies/" + year, function(data) {
+      console.log("Received movie data.");
+      movieDataCache[year] = data;
+      updateMovie(data);
+    });
+  }
+}
 
-  movieHttpRequest = $.getJSON("/movies/" + year, function(data) {
-    console.log("Received movie data !");
-    movies = data;
+function updateMovie(movies) {
+  for (let movieCircle of movieCircles) {
+    movieCircle.setMap(null);
+  }
+  movieCircles = [];
 
-    for (let movieCircle of movieCircles) {
-      movieCircle.setMap(null);
+  for (let movie of movies) {
+    let movieTitle = movie.title;
+    let latlng = movie.latlng.split(',');
+    latlng = { lat: parseInt(latlng[0]), lng: parseInt(latlng[1]) };
+
+    let movieCircle = new google.maps.Circle({
+      strokeColor: '#0000FF',
+      strokeOpacity: 0.8,
+      strokeWeight: 1,
+      fillColor: '#0000FF',
+      fillOpacity: 0.35,
+      map: map,
+      center: latlng,
+      radius: 0, //Math.sqrt(movie.votes_this_year) * 1000,
+      title: movieTitle,
+      clickable: true
+    });
+
+    let radius = movie.votes_this_year * movie.votes_this_year / 100;
+
+    if (radius > 100000) {
+      var increaseRadius = setInterval(() => {
+        let currentRadius = movieCircle.getRadius();
+        if (currentRadius < radius)
+          movieCircle.setRadius(currentRadius + 10000);
+        else
+          clearInterval(increaseRadius);
+      }, 30);
+    } else {
+      movieCircle.setRadius(radius);
     }
-    movieCircles = [];
 
-    for (let movie of movies) {
-      let movieTitle = movie.title;
-      let latlng = movie.latlng.split(',');
-      latlng = { lat: parseInt(latlng[0]), lng: parseInt(latlng[1]) };
 
-      let movieCircle = new google.maps.Circle({
-        strokeColor: '#0000FF',
-        strokeOpacity: 0.8,
-        strokeWeight: 1,
-        fillColor: '#0000FF',
-        fillOpacity: 0.35,
-        map: map,
-        center: latlng,
-        radius: movie.votes_this_year * movie.votes_this_year / 100, //Math.sqrt(movie.votes_this_year) * 1000,
-        title: movieTitle,
-        clickable: true
-      });
+    google.maps.event.addListener(movieCircle, 'mouseover', function(ev){
+      if (infoWindow) infoWindow.close(map);
+      infoWindow = new google.maps.InfoWindow({content: movieTitle});
+      infoWindow.setPosition(movieCircle.getCenter());
+      infoWindow.open(map);
+    });
 
-      google.maps.event.addListener(movieCircle, 'mouseover', function(ev){
+    google.maps.event.addListener(movieCircle, 'click', function(ev){
+        map.panTo(latlng);
         if (infoWindow) infoWindow.close(map);
-        infoWindow = new google.maps.InfoWindow({content: movieTitle});
+        infoWindow = new google.maps.InfoWindow({content: "loading..."});
+        setInfoWindowContent(movieTitle)
         infoWindow.setPosition(movieCircle.getCenter());
         infoWindow.open(map);
-      });
+    });
 
-      google.maps.event.addListener(movieCircle, 'click', function(ev){
-          map.panTo(latlng);
-          if (infoWindow) infoWindow.close(map);
-          infoWindow = new google.maps.InfoWindow({content: "loading..."});
-          setInfoWindowContent(movieTitle)
-          infoWindow.setPosition(movieCircle.getCenter());
-          infoWindow.open(map);
-      });
+    movieCircles.push(movieCircle);
+  }
 
-      movieCircles.push(movieCircle);
-    }
-
-    if (fakeLoader) fakeLoader.fadeOut();
-  });
+  if (fakeLoader) fakeLoader.fadeOut();
 }
 
 function setInfoWindowContent(movieTitle) {
