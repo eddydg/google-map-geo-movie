@@ -163,9 +163,7 @@ function setInfoWindowContent(movieTitle) {
             if (i == 5) break;
             let cast = result.credits.cast[i];
 
-            content += `<img src="${THEMOVIEDB_POSTER_PROFILE + cast.profile_path}"
-                            title="${THEMOVIEDB_POSTER_PROFILE + cast.name}"
-                            alt="${THEMOVIEDB_POSTER_PROFILE + cast.name}" />`
+            content += `<img src="${THEMOVIEDB_POSTER_PROFILE + cast.profile_path}" title="${cast.name}" alt="${cast.name}" />`;
 
           }
           infoWindow.setContent(content);
