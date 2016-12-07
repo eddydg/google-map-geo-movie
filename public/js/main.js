@@ -1,7 +1,8 @@
 //var BASE_OMDB_API = "http://www.omdbapi.com/?plot=short&r=json&t="
 var THEMOVIEDB_API = "cc5d266598f3f83d020f116ec5bb2a7f";
-var BASE_THEMOVIEDB_SEARCH = `https://api.themoviedb.org/3/search/multi?api_key=${THEMOVIEDB_API}&query=`;
-var BASE_THEMOVIEDB_POSTER = "https://image.tmdb.org/t/p/w150";
+var THEMOVIEDB_SEARCH = `https://api.themoviedb.org/3/search/multi?api_key=${THEMOVIEDB_API}&query=`;
+var THEMOVIEDB_POSTER_MOVIE = "https://image.tmdb.org/t/p/w150";
+var THEMOVIEDB_POSTER_PROFILE = "https://image.tmdb.org/t/p/w45";
 var centerLatLng = { lat: 48.858093, lng: 2.294694 };
 var currentSelectedYear = 2000;
 
@@ -132,7 +133,7 @@ function updateMovie(movies) {
 
 function setInfoWindowContent(movieTitle) {
   let q = movieTitle.replace(/ *\([^)]*\) */g, "") // Remove (year)
-  let apiUrl = BASE_THEMOVIEDB_SEARCH + q;
+  let apiUrl = THEMOVIEDB_SEARCH + q;
 
   $.getJSON(apiUrl, function(data){
     if (data.results.length > 0) {
@@ -141,11 +142,32 @@ function setInfoWindowContent(movieTitle) {
       let THEMOVIEDB_MOVIE = `https://api.themoviedb.org/3/movie/${movieId}?api_key=${THEMOVIEDB_API}&append_to_response=keywords,alternative_titles,changes,credits,images,keywords,lists,releases,reviews,similar,translations,videos`;
       $.getJSON(THEMOVIEDB_MOVIE, function(result){
         if (infoWindow) {
+
+          let director = "";
+          for (let crew of result.credits.crew) {
+            if (crew.job.toLowerCase() === "director") {
+              director = crew.name;
+              break;
+            }
+          }
+
+          console.log(director);
           let content = `
-            <h2>${movieTitle}</h2><br>
-            <img style='float:left;margin:0 20px 20px 0' src='${BASE_THEMOVIEDB_POSTER+result.poster_path}'/><br>"
-            ${result.overview}
+            <h2>${movieTitle}</h2>
+            <img style='float:left;margin:0 20px 20px 0' src='${THEMOVIEDB_POSTER_MOVIE + result.poster_path}'/><br>
+            <i>${director}</i><br>
+            <p>${result.overview}</p><br><br>
           `;
+
+          for (var i = 0; i < result.credits.cast.length; i++) {
+            if (i == 5) break;
+            let cast = result.credits.cast[i];
+
+            content += `<img src="${THEMOVIEDB_POSTER_PROFILE + cast.profile_path}"
+                            title="${THEMOVIEDB_POSTER_PROFILE + cast.name}"
+                            alt="${THEMOVIEDB_POSTER_PROFILE + cast.name}" />`
+
+          }
           infoWindow.setContent(content);
         }
       })
