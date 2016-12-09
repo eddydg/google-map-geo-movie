@@ -9,7 +9,9 @@
     "express": "^4.13.3",
     "request": "latest",
     "pg": "latest",
-    "path": "latest"
+    "path": "latest",
+    "twit": "latest",
+    "socket.io": "latest"
   },
   "engines": {
     "node": "5.0.0"
