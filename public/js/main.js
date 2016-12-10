@@ -70,7 +70,7 @@ socket.on('tweet', function (tweet) {
           delete marker;
         }, 30 * 1000);
       } else {
-        alert('Geocode was not successful for the following reason: ' + status);
+        console.log('Geocode was not successful for the following reason: ' + status);
       }
     });
   }

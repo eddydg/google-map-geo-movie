@@ -73,16 +73,21 @@ app.get('/track/:movie', function (req, res) {
 
         console.log("Start tweet stream on '"+trackingMovie+"'");
 
+        // Keep only alphanumeric \w and space \s
+        var keywords = trackingMovie.replace(/[^\w\s]/gi, '').split();
+
         var options = {
-            track: trackingMovie,
+            track: keywords,
             language: 'en'
         }
         tweetStream = twitterClient.stream('statuses/filter', options);
 
         tweetStream.on('tweet', (tweet) => {
             if (tweet.place) {
-                console.log("New tweet: " + tweet.text);
+                console.log(" == New tweet: " + tweet.text + " ==");
                 socket.emit('tweet', { tweet: tweet });
+            } else {
+                console.log("Tweet without place: '"+tweet.text+"'");
             }
         });
     }
