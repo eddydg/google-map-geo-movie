@@ -7,6 +7,7 @@ var centerLatLng = { lat: 48.858093, lng: 2.294694 };
 var currentSelectedYear = 2000;
 
 var map = null;
+var geocoder = null;
 var infoWindow = null;
 var movieHttpRequest = null;
 
@@ -30,7 +31,6 @@ $(() => {
   });
 });
 
-
 /* Google Map */
 function initMap() {
   map = new google.maps.Map(document.getElementById('map'), {
@@ -39,7 +39,44 @@ function initMap() {
   });
 
   requestMovieData();
+  geocoder = new google.maps.Geocoder();
 }
+
+/* Socket.io */
+var socket = io.connect('http://localhost:3000');
+socket.on('tweet', function (tweet) {
+  tweet = tweet.tweet;
+  if (!tweet.place) return;
+
+  console.log("New tweet!");
+  console.log(tweet);
+  let text = tweet.text;
+  let date = tweet.created_at;
+  let place = tweet.place.full_name;
+
+  if (geocoder) {
+    geocoder.geocode( { 'address': place }, function(results, status) {
+      if (status == google.maps.GeocoderStatus.OK) {
+        let marker = new google.maps.Marker({
+          position: results[0].geometry.location,
+          map: map,
+          draggable: false,
+          animation: google.maps.Animation.DROP,
+          title: text
+        });
+
+        setTimeout(() => {
+          marker.setMap(null);
+          delete marker;
+        }, 30 * 1000);
+      } else {
+        alert('Geocode was not successful for the following reason: ' + status);
+      }
+    });
+  }
+
+});
+
 
 function changedSelectedYear() {
   let value = $("#yearRangeSelector").val();
@@ -123,6 +160,8 @@ function updateMovie(movies) {
         setInfoWindowContent(movieTitle)
         infoWindow.setPosition(movieCircle.getCenter());
         infoWindow.open(map);
+
+        trackTwitterTag(movieTitle);
     });
 
     movieCircles.push(movieCircle);
@@ -151,7 +190,6 @@ function setInfoWindowContent(movieTitle) {
             }
           }
 
-          console.log(director);
           let content = `
             <h2>${movieTitle}</h2>
             <img style='float:left;margin:0 20px 20px 0' src='${THEMOVIEDB_POSTER_MOVIE + result.poster_path}'/><br>
@@ -172,5 +210,14 @@ function setInfoWindowContent(movieTitle) {
     } else {
       console.log("Movie not found in TheMovieDB.");
     }
+  });
+}
+
+function trackTwitterTag(movieTitle) {
+  movieTitle = movieTitle.replace(/ *\([^)]*\) */g, "") // Remove (year)
+  if (!movieTitle) return;
+
+  $.getJSON("/track/" + movieTitle, function(tweet) {
+    console.log("Start tracking '" + movieTitle + "' on Twitter (those with geoloc).");
   });
 }

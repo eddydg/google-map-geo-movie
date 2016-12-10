@@ -39,12 +39,5 @@
     <script async defer
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyChNVy6JvUNOYvSM844NiQXd4SXHsq7fAM&callback=initMap">
     </script>
-
-    <script type="text/javascript">
-      var socket = io.connect('http://localhost:3000');
-      socket.on('tweet', function (tweet) {
-        console.log(tweet);
-      });
-    </script>
   </body>
 </html>

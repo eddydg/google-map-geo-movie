@@ -66,6 +66,11 @@ app.get('/track/:movie', function (req, res) {
         }
 
         trackingMovie = req.params.movie;
+        if (trackingMovie == "") {
+            console.log("Not tracking tweets anymore.");
+            return res.end('Request ended');
+        }
+
         console.log("Start tweet stream on '"+trackingMovie+"'");
 
         var options = {
